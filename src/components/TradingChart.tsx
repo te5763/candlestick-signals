@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { createChart, IChartApi, CandlestickSeries, Time } from 'lightweight-charts';
+import { createChart, IChartApi, CandlestickSeries, Time, createSeriesMarkers } from 'lightweight-charts';
 import { Candle, Pattern } from '@/utils/patternDetection';
 
 interface TradingChartProps {
@@ -48,7 +48,7 @@ export const TradingChart = ({ data, patterns }: TradingChartProps) => {
     candleSeriesRef.current = candleSeries;
     candleSeries.setData(data.map(c => ({ ...c, time: c.time as Time })));
 
-    // Add markers for patterns
+    // Add markers for patterns (v5 API)
     const markers = patterns.map(pattern => ({
       time: pattern.time as Time,
       position: pattern.signal === 'bullish' ? 'belowBar' as const : 'aboveBar' as const,
@@ -57,7 +57,7 @@ export const TradingChart = ({ data, patterns }: TradingChartProps) => {
       text: pattern.type,
     }));
 
-    (candleSeries as any).setMarkers(markers);
+    createSeriesMarkers(candleSeries, markers);
 
     // Handle resize
     const handleResize = () => {
@@ -81,7 +81,7 @@ export const TradingChart = ({ data, patterns }: TradingChartProps) => {
     if (candleSeriesRef.current && data.length > 0) {
       candleSeriesRef.current.setData(data.map(c => ({ ...c, time: c.time as Time })));
       
-      // Update markers
+      // Update markers (v5 API)
       const markers = patterns.map(pattern => ({
         time: pattern.time as Time,
         position: pattern.signal === 'bullish' ? 'belowBar' as const : 'aboveBar' as const,
@@ -90,7 +90,7 @@ export const TradingChart = ({ data, patterns }: TradingChartProps) => {
         text: pattern.type,
       }));
       
-      (candleSeriesRef.current as any).setMarkers(markers);
+      createSeriesMarkers(candleSeriesRef.current, markers);
     }
   }, [data, patterns]);
 
