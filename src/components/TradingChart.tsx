@@ -36,7 +36,7 @@ export const TradingChart = ({ data, patterns }: TradingChartProps) => {
     chartRef.current = chart;
 
     // Add candlestick series
-    const candleSeries = chart.addSeries('Candlestick' as any, {
+    const candleSeries = (chart as any).addCandlestickSeries({
       upColor: 'hsl(142, 76%, 36%)',
       downColor: 'hsl(0, 84%, 60%)',
       borderUpColor: 'hsl(142, 76%, 36%)',
