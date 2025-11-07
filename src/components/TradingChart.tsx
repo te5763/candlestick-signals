@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { createChart, IChartApi, ISeriesApi, Time } from 'lightweight-charts';
+import { createChart, IChartApi, CandlestickSeries, Time } from 'lightweight-charts';
 import { Candle, Pattern } from '@/utils/patternDetection';
 
 interface TradingChartProps {
@@ -35,8 +35,8 @@ export const TradingChart = ({ data, patterns }: TradingChartProps) => {
 
     chartRef.current = chart;
 
-    // Add candlestick series
-    const candleSeries = (chart as any).addCandlestickSeries({
+    // Add candlestick series (v5 API)
+    const candleSeries = chart.addSeries(CandlestickSeries, {
       upColor: 'hsl(142, 76%, 36%)',
       downColor: 'hsl(0, 84%, 60%)',
       borderUpColor: 'hsl(142, 76%, 36%)',
