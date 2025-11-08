@@ -68,6 +68,9 @@ export const fetchCoinGeckoData = async (symbol: string): Promise<Candle[]> => {
       close: item[4]
     }));
 
+    // Sort by time in ascending order
+    candles.sort((a, b) => a.time - b.time);
+
     // If we don't have enough data, pad with the last value
     if (candles.length < 50) {
       const lastCandle = candles[candles.length - 1];
@@ -104,13 +107,18 @@ export const fetchBinanceData = async (symbol: string): Promise<Candle[]> => {
     
     const data = await response.json();
     
-    return data.map((item: any[]) => ({
+    const candles = data.map((item: any[]) => ({
       time: Math.floor(item[0] / 1000),
       open: parseFloat(item[1]),
       high: parseFloat(item[2]),
       low: parseFloat(item[3]),
       close: parseFloat(item[4])
     }));
+
+    // Sort by time in ascending order
+    candles.sort((a, b) => a.time - b.time);
+    
+    return candles;
   } catch (error) {
     console.error('Error fetching Binance data:', error);
     throw error; // Re-throw to try fallback

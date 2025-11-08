@@ -79,7 +79,9 @@ export const TradingChart = ({ data, patterns }: TradingChartProps) => {
   // Update data when it changes
   useEffect(() => {
     if (candleSeriesRef.current && data.length > 0) {
-      candleSeriesRef.current.setData(data.map(c => ({ ...c, time: c.time as Time })));
+      // Ensure data is sorted by time before setting
+      const sortedData = [...data].sort((a, b) => a.time - b.time);
+      candleSeriesRef.current.setData(sortedData.map(c => ({ ...c, time: c.time as Time })));
       
       // Update markers (v5 API)
       const markers = patterns.map(pattern => ({
