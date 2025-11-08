@@ -3,6 +3,7 @@ import { TradingChart } from '@/components/TradingChart';
 import { TickerSearch } from '@/components/TickerSearch';
 import { PatternSignals } from '@/components/PatternSignals';
 import { PriceStats } from '@/components/PriceStats';
+import { OptionsAnalysis } from '@/components/OptionsAnalysis';
 import { Candle, Pattern, detectPatterns } from '@/utils/patternDetection';
 import { getPriceData, generateNewCandle } from '@/utils/priceData';
 import { useToast } from '@/hooks/use-toast';
@@ -109,13 +110,21 @@ const Index = () => {
         {/* Price Stats */}
         <PriceStats data={candles} symbol={symbol} />
 
-        {/* Chart and Signals */}
+        {/* Chart and Analysis */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-2 space-y-6">
             <TradingChart data={candles} patterns={patterns} />
-          </div>
-          <div>
+            
+            {/* Pattern Signals */}
             <PatternSignals patterns={patterns} />
+          </div>
+          
+          {/* Options Analysis */}
+          <div>
+            <OptionsAnalysis 
+              data={candles} 
+              currentPrice={candles.length > 0 ? candles[candles.length - 1].close : 0}
+            />
           </div>
         </div>
 
