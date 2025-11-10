@@ -44,7 +44,7 @@ const Index = () => {
   };
 
   useEffect(() => {
-    loadData('BTCUSDT');
+    loadData('AAPL');
   }, []);
 
   // Simulate live updates every 5 seconds

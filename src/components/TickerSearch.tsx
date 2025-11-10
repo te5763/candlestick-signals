@@ -9,13 +9,16 @@ interface TickerSearchProps {
 }
 
 const popularSymbols = [
+  { symbol: 'AAPL', name: 'Apple' },
+  { symbol: 'GOOGL', name: 'Google' },
+  { symbol: 'TSLA', name: 'Tesla' },
+  { symbol: 'MSFT', name: 'Microsoft' },
   { symbol: 'BTCUSDT', name: 'Bitcoin' },
   { symbol: 'ETHUSDT', name: 'Ethereum' },
-  { symbol: 'BNBUSDT', name: 'Binance Coin' },
 ];
 
 export const TickerSearch = ({ onSearch, isLoading }: TickerSearchProps) => {
-  const [symbol, setSymbol] = useState('BTCUSDT');
+  const [symbol, setSymbol] = useState('AAPL');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,7 +34,7 @@ export const TickerSearch = ({ onSearch, isLoading }: TickerSearchProps) => {
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
           <Input
             type="text"
-            placeholder="Enter ticker symbol (e.g., BTCUSDT, ETHUSDT)"
+            placeholder="Enter ticker symbol (e.g., AAPL, TSLA, GOOGL, BTCUSDT)"
             value={symbol}
             onChange={(e) => setSymbol(e.target.value)}
             className="pl-10"

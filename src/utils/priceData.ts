@@ -125,14 +125,38 @@ export const fetchBinanceData = async (symbol: string): Promise<Candle[]> => {
   }
 };
 
+// Fetch stock data from Finnhub via edge function
+export const fetchStockData = async (symbol: string): Promise<Candle[]> => {
+  const { supabase } = await import('@/integrations/supabase/client');
+  
+  const { data, error } = await supabase.functions.invoke('fetch-stock-data', {
+    body: { symbol }
+  });
+
+  if (error) throw error;
+  if (!data?.candles || data.candles.length === 0) {
+    throw new Error('No data returned from stock API');
+  }
+
+  return data.candles;
+};
+
 // Main function to get price data with multiple fallbacks
 export const getPriceData = async (symbol: string): Promise<Candle[]> => {
-  // Normalize symbol format
   const normalizedSymbol = symbol.toUpperCase().trim();
   
   console.log('Fetching price data for:', normalizedSymbol);
   
-  // Try CoinGecko first (most reliable, CORS-friendly)
+  // Try Finnhub first (works for both stocks and crypto)
+  try {
+    const data = await fetchStockData(normalizedSymbol);
+    console.log('Successfully fetched from Finnhub');
+    return data;
+  } catch (error) {
+    console.log('Finnhub failed, trying crypto sources...', error);
+  }
+  
+  // Try CoinGecko for crypto
   try {
     const data = await fetchCoinGeckoData(normalizedSymbol);
     console.log('Successfully fetched from CoinGecko');
@@ -141,7 +165,7 @@ export const getPriceData = async (symbol: string): Promise<Candle[]> => {
     console.log('CoinGecko failed, trying Binance...');
   }
 
-  // Try Binance as fallback
+  // Try Binance as fallback for crypto
   try {
     const data = await fetchBinanceData(normalizedSymbol);
     console.log('Successfully fetched from Binance');
