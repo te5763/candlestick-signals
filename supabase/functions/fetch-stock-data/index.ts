@@ -48,7 +48,12 @@ serve(async (req) => {
     
     console.log(`Alpha Vantage response keys:`, Object.keys(data));
 
-    // Check for API errors
+    // Check for API errors and information messages
+    if (data['Information']) {
+      console.error('Alpha Vantage information:', data['Information']);
+      throw new Error(`Alpha Vantage: ${data['Information']}`);
+    }
+
     if (data['Error Message']) {
       console.error('Alpha Vantage error:', data['Error Message']);
       throw new Error(data['Error Message']);
