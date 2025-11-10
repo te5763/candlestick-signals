@@ -22,55 +22,63 @@ serve(async (req) => {
 
   try {
     const { symbol } = await req.json();
-    const apiKey = Deno.env.get('FINNHUB_API_KEY');
+    const apiKey = Deno.env.get('ALPHA_VANTAGE_API_KEY');
 
     if (!apiKey) {
-      throw new Error('FINNHUB_API_KEY not configured');
+      throw new Error('ALPHA_VANTAGE_API_KEY not configured');
     }
 
     console.log(`Fetching data for symbol: ${symbol}`);
 
-    // Get current timestamp and calculate timestamps for last 30 days to ensure data
-    const now = Math.floor(Date.now() / 1000);
-    const thirtyDaysAgo = now - (30 * 24 * 60 * 60);
-
-    // Fetch candle data from Finnhub (D = daily resolution for more reliable data)
-    const url = `https://finnhub.io/api/v1/stock/candle?symbol=${symbol}&resolution=D&from=${thirtyDaysAgo}&to=${now}&token=${apiKey}`;
+    // Fetch intraday data from Alpha Vantage (15min interval)
+    const url = `https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol=${symbol}&interval=15min&outputsize=full&apikey=${apiKey}`;
     
-    console.log(`Fetching from Finnhub: ${url.replace(apiKey, 'HIDDEN')}`);
+    console.log(`Fetching from Alpha Vantage: ${url.replace(apiKey, 'HIDDEN')}`);
     
     const response = await fetch(url);
     
     if (!response.ok) {
-      console.error(`Finnhub API error: ${response.status} ${response.statusText}`);
+      console.error(`Alpha Vantage API error: ${response.status} ${response.statusText}`);
       const errorText = await response.text();
       console.error(`Error response: ${errorText}`);
-      throw new Error(`Finnhub API returned ${response.status}`);
+      throw new Error(`Alpha Vantage API returned ${response.status}`);
     }
     
     const data = await response.json();
     
-    console.log(`Finnhub response:`, JSON.stringify(data).substring(0, 200));
+    console.log(`Alpha Vantage response keys:`, Object.keys(data));
 
-    if (data.s === 'no_data' || !data.t || data.t.length === 0) {
-      console.log('No data available from Finnhub for this symbol');
+    // Check for API errors
+    if (data['Error Message']) {
+      console.error('Alpha Vantage error:', data['Error Message']);
+      throw new Error(data['Error Message']);
+    }
+
+    if (data['Note']) {
+      console.error('Alpha Vantage rate limit:', data['Note']);
+      throw new Error('API rate limit reached. Please try again later.');
+    }
+
+    // Get the time series data
+    const timeSeriesKey = 'Time Series (15min)';
+    const timeSeries = data[timeSeriesKey];
+
+    if (!timeSeries || Object.keys(timeSeries).length === 0) {
+      console.log('No data available from Alpha Vantage for this symbol');
       throw new Error('No data available for this symbol');
     }
-    
-    if (data.s === 'error') {
-      console.error('Finnhub returned error:', data);
-      throw new Error(data.msg || 'Finnhub API error');
-    }
 
-    // Transform Finnhub data to our Candle format
-    const candles: Candle[] = data.t.map((timestamp: number, index: number) => ({
-      time: timestamp * 1000, // Convert to milliseconds
-      open: data.o[index],
-      high: data.h[index],
-      low: data.l[index],
-      close: data.c[index],
-      volume: data.v[index],
-    }));
+    // Transform Alpha Vantage data to our Candle format
+    const candles: Candle[] = Object.entries(timeSeries)
+      .map(([timestamp, values]: [string, any]) => ({
+        time: new Date(timestamp).getTime(),
+        open: parseFloat(values['1. open']),
+        high: parseFloat(values['2. high']),
+        low: parseFloat(values['3. low']),
+        close: parseFloat(values['4. close']),
+        volume: parseInt(values['5. volume']),
+      }))
+      .sort((a, b) => a.time - b.time); // Sort by time ascending
 
     console.log(`Successfully fetched ${candles.length} candles`);
 
