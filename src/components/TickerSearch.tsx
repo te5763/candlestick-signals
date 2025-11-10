@@ -18,7 +18,7 @@ const popularSymbols = [
 ];
 
 export const TickerSearch = ({ onSearch, isLoading }: TickerSearchProps) => {
-  const [symbol, setSymbol] = useState('AAPL');
+  const [symbol, setSymbol] = useState('BTCUSDT');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

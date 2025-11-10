@@ -147,31 +147,36 @@ export const getPriceData = async (symbol: string): Promise<Candle[]> => {
   
   console.log('Fetching price data for:', normalizedSymbol);
   
-  // Try Finnhub first (works for both stocks and crypto)
-  try {
-    const data = await fetchStockData(normalizedSymbol);
-    console.log('Successfully fetched from Finnhub');
-    return data;
-  } catch (error) {
-    console.log('Finnhub failed, trying crypto sources...', error);
-  }
+  // Check if it's a crypto symbol (ends with USDT or is a known crypto)
+  const isCrypto = normalizedSymbol.includes('USDT') || 
+                   ['BTC', 'ETH', 'BNB', 'SOL', 'ADA', 'DOT'].includes(normalizedSymbol);
   
-  // Try CoinGecko for crypto
-  try {
-    const data = await fetchCoinGeckoData(normalizedSymbol);
-    console.log('Successfully fetched from CoinGecko');
-    return data;
-  } catch (error) {
-    console.log('CoinGecko failed, trying Binance...');
-  }
+  if (isCrypto) {
+    // For crypto, try CoinGecko first, then Binance
+    try {
+      const data = await fetchCoinGeckoData(normalizedSymbol);
+      console.log('Successfully fetched from CoinGecko');
+      return data;
+    } catch (error) {
+      console.log('CoinGecko failed, trying Binance...');
+    }
 
-  // Try Binance as fallback for crypto
-  try {
-    const data = await fetchBinanceData(normalizedSymbol);
-    console.log('Successfully fetched from Binance');
-    return data;
-  } catch (error) {
-    console.log('Binance failed, using demo data');
+    try {
+      const data = await fetchBinanceData(normalizedSymbol);
+      console.log('Successfully fetched from Binance');
+      return data;
+    } catch (error) {
+      console.log('Binance failed, using demo data');
+    }
+  } else {
+    // For stocks, try the stock API but fail gracefully
+    try {
+      const data = await fetchStockData(normalizedSymbol);
+      console.log('Successfully fetched stock data');
+      return data;
+    } catch (error) {
+      console.log('Stock API unavailable (rate limit or API issue), using demo data');
+    }
   }
 
   // Final fallback to demo data
