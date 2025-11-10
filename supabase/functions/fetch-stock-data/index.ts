@@ -30,26 +30,36 @@ serve(async (req) => {
 
     console.log(`Fetching data for symbol: ${symbol}`);
 
-    // Get current timestamp and calculate timestamps for last 5 days
+    // Get current timestamp and calculate timestamps for last 30 days to ensure data
     const now = Math.floor(Date.now() / 1000);
-    const fiveDaysAgo = now - (5 * 24 * 60 * 60);
+    const thirtyDaysAgo = now - (30 * 24 * 60 * 60);
 
-    // Fetch candle data from Finnhub (15-minute resolution)
-    const url = `https://finnhub.io/api/v1/stock/candle?symbol=${symbol}&resolution=15&from=${fiveDaysAgo}&to=${now}&token=${apiKey}`;
+    // Fetch candle data from Finnhub (D = daily resolution for more reliable data)
+    const url = `https://finnhub.io/api/v1/stock/candle?symbol=${symbol}&resolution=D&from=${thirtyDaysAgo}&to=${now}&token=${apiKey}`;
     
     console.log(`Fetching from Finnhub: ${url.replace(apiKey, 'HIDDEN')}`);
     
     const response = await fetch(url);
+    
+    if (!response.ok) {
+      console.error(`Finnhub API error: ${response.status} ${response.statusText}`);
+      const errorText = await response.text();
+      console.error(`Error response: ${errorText}`);
+      throw new Error(`Finnhub API returned ${response.status}`);
+    }
+    
     const data = await response.json();
-
-    console.log(`Finnhub response status: ${data.s}`);
+    
+    console.log(`Finnhub response:`, JSON.stringify(data).substring(0, 200));
 
     if (data.s === 'no_data' || !data.t || data.t.length === 0) {
-      console.log('No data available from Finnhub');
-      return new Response(
-        JSON.stringify({ error: 'No data available for this symbol' }),
-        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      console.log('No data available from Finnhub for this symbol');
+      throw new Error('No data available for this symbol');
+    }
+    
+    if (data.s === 'error') {
+      console.error('Finnhub returned error:', data);
+      throw new Error(data.msg || 'Finnhub API error');
     }
 
     // Transform Finnhub data to our Candle format
