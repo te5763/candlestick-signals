@@ -14,16 +14,25 @@ const Index = () => {
   const [candles, setCandles] = useState<Candle[]>([]);
   const [patterns, setPatterns] = useState<Pattern[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isUsingDemoData, setIsUsingDemoData] = useState(false);
   const { toast } = useToast();
 
   const loadData = async (newSymbol: string) => {
     setIsLoading(true);
+    setIsUsingDemoData(false);
     try {
+      console.log(`Loading data for ${newSymbol}...`);
       const data = await getPriceData(newSymbol);
       setCandles(data);
       const detectedPatterns = detectPatterns(data);
       setPatterns(detectedPatterns);
       setSymbol(newSymbol);
+
+      // Check if we got demo data (demo data has exactly 100 candles)
+      const isDemoData = data.length === 100;
+      setIsUsingDemoData(isDemoData);
+      
+      console.log(`Loaded ${data.length} candles. Demo data: ${isDemoData}`);
 
       if (detectedPatterns.length > 0) {
         const latestPattern = detectedPatterns[detectedPatterns.length - 1];
@@ -34,7 +43,7 @@ const Index = () => {
       }
     } catch (error) {
       console.error('Error loading data:', error);
-      // Error is handled gracefully with demo data fallback
+      setIsUsingDemoData(true);
     } finally {
       setIsLoading(false);
     }
@@ -103,6 +112,16 @@ const Index = () => {
       <main className="container mx-auto px-4 py-8 space-y-6">
         {/* Search */}
         <TickerSearch onSearch={loadData} isLoading={isLoading} />
+
+        {/* Demo Data Warning */}
+        {isUsingDemoData && (
+          <div className="bg-muted/50 border border-border rounded-lg p-4 text-sm">
+            <strong className="text-foreground">Note:</strong>{' '}
+            <span className="text-muted-foreground">
+              Displaying simulated data for {symbol}. Live API sources may be rate-limited.
+            </span>
+          </div>
+        )}
 
         {/* Price Stats */}
         <PriceStats data={candles} symbol={symbol} />

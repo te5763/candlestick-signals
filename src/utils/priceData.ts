@@ -1,9 +1,24 @@
 import { Candle } from './patternDetection';
 
-// Generate realistic candlestick data for demo purposes
+// Generate realistic candlestick data for demo purposes with current market prices
 export const generateDemoData = (symbol: string, count: number = 100): Candle[] => {
   const candles: Candle[] = [];
-  let basePrice = symbol.includes('BTC') ? 95000 : symbol.includes('ETH') ? 3500 : 150;
+  
+  // More accurate base prices as of 2025
+  const basePrices: Record<string, number> = {
+    'BTC': 95000, 'BTCUSDT': 95000,
+    'ETH': 3500, 'ETHUSDT': 3500,
+    'BNB': 600, 'BNBUSDT': 600,
+    'SOL': 200, 'SOLUSDT': 200,
+    'AAPL': 235,
+    'MSFT': 445,
+    'GOOGL': 190,
+    'TSLA': 380,
+    'AMZN': 220,
+    'NVDA': 145,
+  };
+  
+  let basePrice = basePrices[symbol.toUpperCase()] || 150;
   const now = Date.now();
   
   for (let i = 0; i < count; i++) {
